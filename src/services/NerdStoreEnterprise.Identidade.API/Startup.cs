@@ -5,7 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
 using NerdStoreEnterprise.Identidade.API.Data;
+using System;
 
 namespace NerdStoreEnterprise.Identidade.API
 {
@@ -16,7 +18,7 @@ namespace NerdStoreEnterprise.Identidade.API
             Configuration = configuration;
         }
 
-        public IConfiguration Configuration { get; }  
+        public IConfiguration Configuration { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
@@ -27,11 +29,29 @@ namespace NerdStoreEnterprise.Identidade.API
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
-            
+
             services.AddControllers();
+
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "NerdStore Enterprise Identity API",
+                    Description = "Esta API faz parte do curso Asp.Net Core Enterprise Application da plataforma Dev.io",
+                    Contact = new OpenApiContact() { Name = "Esdras Costa", Email = "contato@devde.io " },
+                    License = new OpenApiLicense() { Name = "MIT", Url = new Uri("https://opensource.or/license/MIT") }
+                });
+            });
+
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+            });
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -40,10 +60,10 @@ namespace NerdStoreEnterprise.Identidade.API
             app.UseHttpsRedirection();
 
             app.UseRouting();
+            
+            app.UseAuthentication();
 
             app.UseAuthorization();
-
-            app.UseAuthentication();
 
             app.UseEndpoints(endpoints =>
             {
