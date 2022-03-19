@@ -10,7 +10,6 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 
 namespace NerdStoreEnterprise.Identidade.API.Controllers
 {
@@ -28,12 +27,6 @@ namespace NerdStoreEnterprise.Identidade.API.Controllers
             _signInManager = signInManager;
             _userManager = userManager;
             _appSettings = appSettings.Value;
-        }
-
-        [HttpGet]
-        public string Get()
-        {
-            return ("Ok");
         }
 
         [HttpPost("cadastrar")]
