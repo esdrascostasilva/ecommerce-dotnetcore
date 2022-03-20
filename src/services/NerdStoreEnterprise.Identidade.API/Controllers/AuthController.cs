@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using NerdStoreEnterprise.Identidade.API.Extensions;
 using NerdStoreEnterprise.Identidade.API.Models;
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -84,9 +85,17 @@ namespace NerdStoreEnterprise.Identidade.API.Controllers
 
         private async Task<UsuarioRespostaLoginViewModel> GerarJwt(string email)
         {
-            // buscar o email passado. Não vou me preocupar pq sei que ele existe pq ja foi autenticado
             var user = await _userManager.FindByEmailAsync(email);
             var claims = await _userManager.GetClaimsAsync(user);
+
+            var identityClaims = await ObterClaimsUsuario(claims, user);
+            var encodedToken = CodificarToken(identityClaims);
+
+            return ObterRespostaToken(encodedToken, user, claims);
+        }
+
+        private async Task<ClaimsIdentity> ObterClaimsUsuario(ICollection<Claim> claims, IdentityUser user)
+        {
             var userRoles = await _userManager.GetRolesAsync(user);
 
             // Tipos de Claim especifica para JWT
@@ -104,22 +113,29 @@ namespace NerdStoreEnterprise.Identidade.API.Controllers
             var identityClaims = new ClaimsIdentity();
             identityClaims.AddClaims(claims);
 
+            return identityClaims;
+        }
+
+        private string CodificarToken(ClaimsIdentity claimsIdentity)
+        {
             // Gerar o manipulador do token
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
-
             var token = tokenHandler.CreateToken(new SecurityTokenDescriptor
             {
                 Issuer = _appSettings.Emissor,
                 Audience = _appSettings.ValidoEm,
-                Subject = identityClaims,
+                Subject = claimsIdentity,
                 Expires = DateTime.UtcNow.AddHours(_appSettings.ExpiracaoHoras),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             });
 
-            var encodedToken = tokenHandler.WriteToken(token);
+            return tokenHandler.WriteToken(token);
+        }
 
-            var response = new UsuarioRespostaLoginViewModel
+        private UsuarioRespostaLoginViewModel ObterRespostaToken(string encodedToken, IdentityUser user, IEnumerable<Claim> claims)
+        {
+            return new UsuarioRespostaLoginViewModel
             {
                 AccessToken = encodedToken,
                 ExpireIn = TimeSpan.FromHours(_appSettings.ExpiracaoHoras).TotalSeconds,
@@ -130,8 +146,6 @@ namespace NerdStoreEnterprise.Identidade.API.Controllers
                     Claims = claims.Select(c => new UsuarioClaimViewModel { Type = c.Type, Value = c.Value })
                 }
             };
-
-            return response;
         }
 
         private static long ToUnixEpochDate(DateTime date)
