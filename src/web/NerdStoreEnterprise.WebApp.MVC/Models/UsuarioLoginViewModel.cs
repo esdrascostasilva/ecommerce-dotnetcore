@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NerdStoreEnterprise.WebApp.MVC.Models
 {
-    public class UsurioLoginViewModel
+    public class UsuarioLoginViewModel
     {
         [Required(ErrorMessage = "O campo {0} é obrigatório")]
         [EmailAddress(ErrorMessage = "O campo {0} não está em um formato válido")]
