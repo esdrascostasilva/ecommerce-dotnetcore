@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace NerdStoreEnterprise.WebApp.MVC.Controllers
 {
-    public class IdentidadeController : Controller
+    public class IdentidadeController : MainController
     {
         private readonly IAutenticacaoService _autenticacaoService;
 
@@ -34,12 +34,11 @@ namespace NerdStoreEnterprise.WebApp.MVC.Controllers
             if (!ModelState.IsValid)
                 return View(usuarioRegistro);
 
-            // Comunicar-se com a API para realizar o Registro
             var resposta = await _autenticacaoService.Registro(usuarioRegistro);
 
-            //if (false) return View(usuarioRegistro);
+            if (ResponsePossuiErros(resposta.ResponseResult)) 
+                return View(usuarioRegistro);
 
-            // Caso contrário, realizar o login na APP e redirecionar para algum lugar
             await RealizarLogin(resposta);
 
             return RedirectToAction("Index", "Home");
@@ -59,14 +58,12 @@ namespace NerdStoreEnterprise.WebApp.MVC.Controllers
             if (!ModelState.IsValid)
                 return View(usuarioLogin);
 
-            // Comunicar-se com a API para realizar o Login
             var resposta = await _autenticacaoService.Login(usuarioLogin);
 
-            //if (false) return View(usuarioLogin);
+            if (ResponsePossuiErros(resposta.ResponseResult))
+                return View(usuarioLogin);
 
-            // Caso contrário, realizar o login na APP e redirecionar para algum lugar
             await RealizarLogin(resposta);
-
 
             return RedirectToAction("Index", "Home");
         }
